@@ -84,23 +84,15 @@ class Tweet:
         except NoSuchElementException:
             pass
 
-        # poster handle
+        # poster handle + user
         try:
-            self.tweet_dictionary['handle'] = self.card.find_element(
-                "xpath", './/span[contains(text(), "@")]'
-            ).text
+            user_name_spans = self.card.find_elements("xpath", './/div[@data-testid="User-Name"]//span')
+            # trust me bro
+            self.tweet_dictionary['user'] = user_name_spans[0].text
+            self.tweet_dictionary['handle'] = user_name_spans[3].text 
         except NoSuchElementException:
             self.error = True
             self.tweet_dictionary['handle'] = "skip"
-        
-        # poster display name
-        try:
-            self.tweet_dictionary['user'] = self.card.find_element(
-                "xpath", './/div[@data-testid="User-Name"]//span'
-            ).text
-        except NoSuchElementException:
-            self.error = True
-            self.tweet_dictionary['user'] = "skip"
         
         # is_quoted_tweet
         try:
@@ -145,9 +137,9 @@ class Tweet:
             )
             for element in elements:
                 if "video_thumb" in element.get_attribute("src"): continue
-                if self.tweet_dictionary['tweet_id'] not in element.find_element("xpath", "ancestor::a[1]").get_attribute("href"): continue
+                # if self.tweet_dictionary['tweet_id'] not in element.find_element("xpath", "ancestor::a[1]").get_attribute("href"): continue
 
-                if elements.get_attribute("src") == '':
+                if element.get_attribute("src") == '':
                     # we have a live video, wait for the request to come in
                     time_wait = 0.0
                     while len(self.blob_queue) == 0 and time_wait < 10:
