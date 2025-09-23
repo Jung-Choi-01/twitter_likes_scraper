@@ -55,12 +55,6 @@ def main():
     )
 
     parser.add_argument(
-        "--likes",
-        action='store_true',
-        help="Twitter likes. Scrape tweets from your likes.",
-    )
-
-    parser.add_argument(
         "-ntl",
         "--no_tweets_limit",
         nargs='?',
@@ -70,7 +64,7 @@ def main():
 
     parser.add_argument(
         "--rateLimit",
-        type=str,
+        type=int,
         default=os.getenv("RATELIMIT") if os.getenv("RATELIMIT") is not None else 3,
         help="T/S to throttle to (integer)"
     )
