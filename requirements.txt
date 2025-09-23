@@ -1,0 +1,8 @@
+fake_headers>=1.0.2
+pandas>=2.0.3
+python-dotenv>=1.0.0
+selenium>=4.12.0
+webdriver_manager>=4.0.0
+blinker==1.7.0
+setuptools>=80.0.0
+selenium-wire>=5.1.0
