@@ -102,12 +102,17 @@ def main():
             stop_id=args.stopId
         )
         scraper.login()
-        scraper.scrape_tweets(
-            max_tweets=args.tweets,
-            no_tweets_limit= args.no_tweets_limit if args.no_tweets_limit is not None else True,
-            username=USER_UNAME
-        )
-        scraper.save_to_json()
+        try:
+            scraper.scrape_tweets(
+                max_tweets=args.tweets,
+                no_tweets_limit= args.no_tweets_limit if args.no_tweets_limit is not None else True,
+                username=USER_UNAME
+            )
+        except Exception as e:
+            print(e)
+        finally:
+            scraper.save_to_json()
+        
         if not scraper.interrupted:
             scraper.driver.close()
     else:
