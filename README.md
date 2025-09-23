@@ -26,4 +26,5 @@ RATELIMIT=INTEGER_VALUE
 This code is based off of [godkingjay's selenium-twitter-scraper](https://github.com/godkingjay/selenium-twitter-scraper), with the following modifications:
 - Authentication uses an auth_token instead of a password
 - Scraper can now only retrieve likes
+- Scraper shows tweets per second in progress bar
 - Extra fields for liked tweets added (quote tweet info, video scraping, is reply, and more)
