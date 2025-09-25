@@ -62,11 +62,17 @@ class Tweet:
         self.tweet_dictionary['content'] = ""
         elements = self.card.find_elements(
             "xpath",
-            '(.//div[@data-testid="tweetText" and not(ancestor::div[div[span[text()="Quote"]]])])[1]/span | (.//div[@data-testid="tweetText" and not(ancestor::div[div[span[text()="Quote"]]])])[1]/a'
+            '(.//div[@data-testid="tweetText" and not(ancestor::div[div[span[text()="Quote"]]])])[1]/img | (.//div[@data-testid="tweetText" and not(ancestor::div[div[span[text()="Quote"]]])])[1]/span | (.//div[@data-testid="tweetText" and not(ancestor::div[div[span[text()="Quote"]]])])[1]/a'
         )
         for element in elements:
             # this is main tweet text
-            self.tweet_dictionary['content'] += element.text + "\n"
+            self.tweet_dictionary['content'] += element.text
+            if element.get_attribute("alt") != None and len(element.get_attribute("alt")) != 0:
+                self.tweet_dictionary['content'] += element.get_attribute("alt")
+            else:
+                self.tweet_dictionary['content'] += "\n"
+        self.tweet_dictionary['content'] = self.tweet_dictionary['content'].strip()
+                
 
         # quote text
         self.tweet_dictionary['quote_tweet_text'] = ""
@@ -77,12 +83,17 @@ class Tweet:
             )
             quote_tweet_text_elements = quote_element.find_elements(
                 'xpath',
-                './/div[@data-testid="tweetText"][1]/span'
+                './/div[@data-testid="tweetText"][1]/span | .//div[@data-testid="tweetText"][1]/img'
             )
             for element in quote_tweet_text_elements:
-                self.tweet_dictionary['quote_tweet_text'] += element.text + "\n"
+                self.tweet_dictionary['quote_tweet_text'] += element.text
+                if element.get_attribute("alt") != None and len(element.get_attribute("alt")) != 0:
+                    self.tweet_dictionary['quote_tweet_text'] += element.get_attribute("alt")
+                else:
+                    self.tweet_dictionary['quote_tweet_text'] += "\n"
         except NoSuchElementException:
             pass
+        self.tweet_dictionary['quote_tweet_text'] = self.tweet_dictionary['quote_tweet_text'].strip()
 
         # poster handle + user
         try:
