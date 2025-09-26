@@ -200,8 +200,6 @@ class twitter_scraper:
 
         start_time = time()
         self.progress.print_progress(0, False, 0, no_tweets_limit, time() - start_time)
-
-        refresh_count = 0
         empty_count = 0
         retry_cnt = 0
 
@@ -216,7 +214,7 @@ class twitter_scraper:
                 added_tweets_current_pull = 0
 
                 # for each of the last 15 cards in the tweet cards in view (limit processing?)
-                for card in self.tweet_cards[-10:]:
+                for card in self.tweet_cards[-15:]:
                     try:
                         card_start_time = time()
                         
@@ -238,6 +236,11 @@ class twitter_scraper:
                         if tweet.tweet_dictionary['tweet_id'] in self.tweet_ids: continue
                         self.tweet_ids.add(tweet.tweet_dictionary['tweet_id'])
 
+                        # append metadata for scrapstack
+                        tweet.tweet_dictionary['isBanned'] = False
+                        tweet.tweet_dictionary['tagSet'] = []
+                        tweet.tweet_dictionary['stackUsername'] = username
+
                         self.data.append(tweet.tweet_dictionary)
                         added_tweets_current_pull += 1
                         self.progress.print_progress(current=len(self.data), waiting=False, retry_cnt=0, no_tweets_limit=no_tweets_limit, time_elapsed=time() - start_time)
@@ -252,8 +255,10 @@ class twitter_scraper:
                     except NoSuchElementException:
                         continue
 
+                # in case we have no new tweets from this pull
                 if added_tweets_current_pull == 0:
                     # Check if there is a button "Retry" and click on it with a regular basis until a certain amount of tries
+                    # most often this will go straight to the except and then empty_count check
                     try:
                         while retry_cnt < 15:
                             retry_button = self.driver.find_element(
@@ -266,19 +271,15 @@ class twitter_scraper:
                     # There is no Retry button so the counter is reseted
                     except NoSuchElementException:
                         retry_cnt = 0
-                        self.progress.print_progress(len(self.data), False, 0, no_tweets_limit, time() - start_time)
 
-                    if empty_count >= 5:
-                        if refresh_count >= 3:
-                            print()
-                            print("No more tweets to scrape")
-                            break
-                        refresh_count += 1
+                    if empty_count >= 100:
+                        print()
+                        print("No more tweets to scrape")
+                        break
                     empty_count += 1
-                    sleep(1)
+                    sleep(.2)
                 else:
                     empty_count = 0
-                    refresh_count = 0
             except StaleElementReferenceException:
                 sleep(2)
                 continue
