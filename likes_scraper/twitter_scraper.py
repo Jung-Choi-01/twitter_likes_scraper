@@ -272,7 +272,7 @@ class twitter_scraper:
                     except NoSuchElementException:
                         retry_cnt = 0
 
-                    if empty_count >= 100:
+                    if empty_count >= 200:
                         print()
                         print("No more tweets to scrape")
                         break
@@ -281,7 +281,6 @@ class twitter_scraper:
                 else:
                     empty_count = 0
             except StaleElementReferenceException:
-                sleep(2)
                 continue
 
         print("")
