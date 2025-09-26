@@ -25,11 +25,9 @@ class Tweet:
         self.card = card
         self.blob_queue = blob_queue
     
-    def process(self):
+    def process(self, set_processed_tweet_ids):
         self.error = False
         self.tweet_dictionary = {}
-
-        # required data:
 
         # tweet post time
         # grab this first because if there's an error it's an ad and so we don't want to grab the rest of it at all
@@ -54,6 +52,7 @@ class Tweet:
                 ".//a[contains(@href, '/status/')]",
             ).get_attribute("href")
             self.tweet_dictionary['tweet_id'] = str(self.tweet_dictionary['tweet_link'].split("/")[-1])
+            if self.tweet_dictionary['tweet_id'] in set_processed_tweet_ids: return
         except NoSuchElementException:
             self.tweet_dictionary['tweet_link'] = ""
             self.tweet_dictionary['tweet_id'] = ""

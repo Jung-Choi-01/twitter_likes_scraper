@@ -3,7 +3,6 @@ import sys
 import json
 import pandas as pd
 from progress import Progress
-from scroller import Scroller
 from tweet import Tweet
 
 from datetime import datetime
@@ -53,7 +52,6 @@ class twitter_scraper:
         self.progress = Progress(0, max_tweets)
         self.driver = self._get_driver(proxy)
         self.actions = ActionChains(self.driver)
-        self.scroller = Scroller(self.driver)
         self.ratelimit = ratelimit
         self.stop_id = stop_id
         self._config_scraper(
@@ -75,7 +73,6 @@ class twitter_scraper:
             "type": None,
             "username": username,
         }
-        self.scroller = Scroller(self.driver)
 
     def _get_driver(
         self,
@@ -205,52 +202,48 @@ class twitter_scraper:
         self.progress.print_progress(0, False, 0, no_tweets_limit, time() - start_time)
 
         refresh_count = 0
-        added_tweets = 0
         empty_count = 0
         retry_cnt = 0
 
         # sometimes the first blobbed videos don't load if we don't have this
         sleep(2)
 
-        while self.scroller.scrolling:
+        finished = False
+        while not finished:
             try:
                 # gets every tweet card in the browser view currently
                 self.get_tweet_cards()
-                added_tweets = 0
+                added_tweets_current_pull = 0
 
                 # for each of the last 15 cards in the tweet cards in view (limit processing?)
-                for card in self.tweet_cards[-15:]:
+                for card in self.tweet_cards[-10:]:
                     try:
                         card_start_time = time()
-
-                        tweet_id = str(card)
-
-                        # if we haven't processed the tweet yet
-                        if tweet_id in self.tweet_ids: continue
-                        self.tweet_ids.add(tweet_id)
                         
                         # center the screen around the card
                         self.driver.execute_script(
                             "arguments[0].scrollIntoView();", card
                         )
                         tweet = Tweet(card=card, blob_queue=self.blob_queue)
-                        tweet.process()
+
+                        # pass in the tweet ids so we know which tweets to skip BEFORE we enter blob queue
+                        tweet.process(self.tweet_ids)
 
                         # store the data and track that we've stored it, if it's not null
                         if tweet is None: continue
                         if tweet.error: continue
                         if tweet.tweet_dictionary is None: continue 
                         if tweet.is_ad: continue
+                        # avoid adding duplicates (attempted solution 2!)
+                        if tweet.tweet_dictionary['tweet_id'] in self.tweet_ids: continue
+                        self.tweet_ids.add(tweet.tweet_dictionary['tweet_id'])
 
-                        tweet.tweet_dictionary['tweet_id'] = int(tweet.tweet_dictionary['tweet_id'])
                         self.data.append(tweet.tweet_dictionary)
-                        added_tweets += 1
-                        current_num_tweets = len(self.data)
-                        self.progress.print_progress(current_num_tweets, False, 0, no_tweets_limit, time() - start_time)
-
+                        added_tweets_current_pull += 1
+                        self.progress.print_progress(current=len(self.data), waiting=False, retry_cnt=0, no_tweets_limit=no_tweets_limit, time_elapsed=time() - start_time)
                         if len(self.data) >= self.max_tweets and not no_tweets_limit \
                         or tweet.tweet_dictionary['tweet_id'] == self.stop_id:
-                            self.scroller.scrolling = False
+                            finished = True
                             break
 
                         # throttle by remaining time required to get t/s, or 0 if that would've been negative
@@ -259,10 +252,7 @@ class twitter_scraper:
                     except NoSuchElementException:
                         continue
 
-                if len(self.data) >= self.max_tweets and not no_tweets_limit:
-                    break
-
-                if added_tweets == 0:
+                if added_tweets_current_pull == 0:
                     # Check if there is a button "Retry" and click on it with a regular basis until a certain amount of tries
                     try:
                         while retry_cnt < 15:
