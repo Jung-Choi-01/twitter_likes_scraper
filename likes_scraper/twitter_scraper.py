@@ -216,14 +216,9 @@ class twitter_scraper:
                 # for each of the last 15 cards in the tweet cards in view (limit processing?)
                 for card in self.tweet_cards[-15:]:
                     try:
-                        card_start_time = time()
-                        
-                        # center the screen around the card
-                        self.driver.execute_script(
-                            "arguments[0].scrollIntoView();", card
-                        )
-                        tweet = Tweet(card=card, blob_queue=self.blob_queue)
-
+                        card_start_time = time()                    
+                        tweet = Tweet(card=card, blob_queue=self.blob_queue, driver=self.driver)
+    
                         # pass in the tweet ids so we know which tweets to skip BEFORE we enter blob queue
                         tweet.process(self.tweet_ids)
 

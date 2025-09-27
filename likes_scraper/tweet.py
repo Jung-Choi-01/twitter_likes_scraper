@@ -3,7 +3,7 @@ from selenium.common.exceptions import (
     NoSuchElementException,
     StaleElementReferenceException,
 )
-from selenium.webdriver.chrome.webdriver import WebDriver
+from selenium.webdriver.firefox.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 
@@ -21,9 +21,10 @@ def remove_name_param(url):
     return new_url
 
 class Tweet:
-    def __init__(self, card: WebDriver, blob_queue: list) -> None:
+    def __init__(self, card: WebDriver, blob_queue: list, driver) -> None:
         self.card = card
         self.blob_queue = blob_queue
+        self.driver = driver
     
     def process(self, set_processed_tweet_ids):
         self.error = False
@@ -56,6 +57,12 @@ class Tweet:
         except NoSuchElementException:
             self.tweet_dictionary['tweet_link'] = ""
             self.tweet_dictionary['tweet_id'] = ""
+
+        # alright we're committed to processing this tweet let's scroll to it
+        # center the screen around the card
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView();", self.card
+        )
 
         # tweet text
         self.tweet_dictionary['content'] = ""
