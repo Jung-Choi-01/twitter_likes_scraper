@@ -212,9 +212,8 @@ class twitter_scraper:
                 # gets every tweet card in the browser view currently
                 self.get_tweet_cards()
                 added_tweets_current_pull = 0
-
-                # for each of the last 15 cards in the tweet cards in view (limit processing?)
-                for card in self.tweet_cards[-15:]:
+                
+                for card in self.tweet_cards:
                     try:
                         card_start_time = time()                    
                         tweet = Tweet(card=card, blob_queue=self.blob_queue, driver=self.driver)
